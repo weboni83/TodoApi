@@ -1,0 +1,36 @@
+version: "3"
+
+services:
+  myapi:
+    image: myapi
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - LETSENCRYPT_HOST=api.acme.io
+      - LETSCRYPT_EMAIL=dev.ironpot@gmail.com
+    ports:
+      - "80:80"
+      - "443:443"
+
+  nginx:
+    image: nginx:latest
+    container_name: my_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - /etc/letsencrypt/:/etc/letsencrypt/
+    restart: always
+
+  certbot:
+    image: certbot/certbot
+    container_name: my_certbot
+    command: certonly --webroot --webroot-path=/var/www/html --email youremail@example.com --agree-tos -d yourdomain.com -d www.yourdomain.com
+    volumes:
+      - ./certbot:/etc/letsencrypt
+      - ./html:/var/www/html
+    depends_on:
+      - nginx
